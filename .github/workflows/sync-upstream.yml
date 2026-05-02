@@ -1,0 +1,32 @@
+name: Sync Upstream Releases
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create missing tags
+        run: |
+          gh api "repos/h4ckf0r0day/obscura/releases?per_page=100" --jq '.[].tag_name' \
+          | while IFS= read -r TAG; do
+              if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+                echo "skip: ${TAG}"
+              else
+                echo "new:  ${TAG}"
+                git tag "$TAG" && git push origin "$TAG"
+                sleep 3
+              fi
+            done
