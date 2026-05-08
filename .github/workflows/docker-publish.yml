@@ -27,17 +27,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       - name: Download release asset
         uses: robinraju/release-downloader@v1
         with:
           repository: h4ckf0r0day/obscura
-          tag: ${{ steps.meta.outputs.tags }}
+          tag: ${{ github.ref_name }}
           fileName: obscura-x86_64-linux.tar.gz
           out-file-path: .
 
@@ -49,6 +43,12 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - uses: docker/build-push-action@v6
         with:
